@@ -43,19 +43,37 @@ This project contains two versions of a web application:
 ## Project Structure
 
 ```
-vulnerable-website/
-├── vulnerable-app/          # Intentionally vulnerable version
-│   ├── backend/            # Node.js/Express API
-│   ├── frontend/           # HTML/CSS/JS client
-│   └── database/           # SQLite database
-├── secure-app/             # Secure implementation
-│   ├── backend/
-│   ├── frontend/
-│   └── database/
-└── docs/                   # Vulnerability documentation
-    ├── exploitation-guide.md
-    ├── remediation-guide.md
-    └── owasp-mapping.md
+📁 Vulnerable website/
+│
+├── 📁 docs/
+│   ├── code-comparison.md
+│   ├── exploitation-guide.md
+│   ├── owasp-mapping.md
+│   ├── pentesting-checklist.md
+│   └── remediation-guide.md
+│
+├── 📁 secure-app/
+│   ├── 📁 backend/
+│   │   ├── server.js
+│   │   └── package.json
+│   └── 📁 frontend/
+│       ├── app.js
+│       ├── index.html
+│       └── styles.css
+│
+├── 📁 vulnerable-app/
+│   ├── 📁 backend/
+│   │   ├── server.js
+│   │   └── package.json
+│   └── 📁 frontend/
+│       ├── app.js
+│       ├── index.html
+│       └── styles.css
+│
+├── PROJECT-SUMMARY.md
+├── QUICKSTART.md
+└── README.md
+
 ```
 
 ## Quick Start
