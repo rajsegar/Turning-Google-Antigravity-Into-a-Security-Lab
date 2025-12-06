@@ -1,6 +1,6 @@
 # Vulnerable Website - Pentesting Research Project
 
-⚠️ **WARNING**: This project contains intentionally vulnerable code for educational and research purposes only. DO NOT deploy to production or expose to the internet.
+ **WARNING**: This project contains intentionally vulnerable code for educational and research purposes only. DO NOT deploy to production or expose to the internet.
 
 ## Overview
 
